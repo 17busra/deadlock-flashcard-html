@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BİM 323 İşletim Sistemleri - 9. Hafta</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .header {
+            text-align: center;
+            color: #0f172a;
+            margin-bottom: 20px;
+        }
+        .header h1 { margin: 0; color: #1e293b; font-size: 2rem; }
+        
+        .stats-panel {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            background: white;
+            padding: 15px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            font-weight: 600;
+        }
+        .stat-item { display: flex; flex-direction: column; align-items: center; }
+        .stat-val { font-size: 1.5rem; }
+        .val-total { color: #475569; }
+        .val-correct { color: #10b981; }
+        .val-incorrect { color: #ef4444; }
+
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .tool-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            background: #e2e8f0;
+            color: #475569;
+            transition: all 0.2s;
+        }
+        .tool-btn.active {
+            background: #3b82f6;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(59,130,246,0.3);
+        }
+        .tool-btn:hover:not(.active) {
+            background: #cbd5e1;
+        }
+
+        .card-container {
+            background: white;
+            width: 100%;
+            max-width: 650px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+            padding: 40px 30px;
+            text-align: center;
+            border-top: 6px solid #3b82f6;
+            position: relative;
+        }
+        
+        .progress {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 0.9rem;
+            color: #64748b;
+            font-weight: bold;
+        }
+
+        .question-text {
+            font-size: 1.3rem;
+            font-weight: 500;
+            margin: 30px 0;
+            line-height: 1.6;
+            color: #1e293b;
+        }
+        .question-text strong {
+            color: #3b82f6;
+            text-decoration: underline;
+        }
+
+        .input-wrapper {
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            width: 80%;
+            padding: 15px;
+            font-size: 1.2rem;
+            border: 2px solid #cbd5e1;
+            border-radius: 10px;
+            outline: none;
+            text-align: center;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        input[type="text"]:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+        }
+
+        .feedback {
+            margin-top: 15px;
+            margin-bottom: 25px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            min-height: 50px;
+        }
+        .correct { color: #10b981; }
+        .incorrect { color: #ef4444; }
+        .answer-reveal {
+            color: #334155;
+            font-size: 1.1rem;
+            font-weight: normal;
+            margin-top: 8px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        .nav-buttons button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+            color: white;
+            transition: opacity 0.2s;
+        }
+        .nav-buttons button:hover {
+            opacity: 0.8;
+        }
+        #btnPrev { background: #64748b; }
+        #btnNext { background: #3b82f6; display: none; } 
+        
+        .bottom-actions {
+            margin-top: 30px;
+        }
+        #btnReset {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        #btnReset:hover { background: #dc2626; }
+
+        .empty-state {
+            padding: 40px;
+            font-size: 1.2rem;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>BİM 323 İşletim Sistemleri - 9. Hafta</h1>
+    </div>
+
+    <div class="stats-panel">
+        <div class="stat-item">
+            <span class="stat-val val-total" id="statTotal">0</span>
+            <span>Soru</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-val val-correct" id="statCorrect">0</span>
+            <span>Doğru</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-val val-incorrect" id="statIncorrect">0</span>
+            <span>Yanlış</span>
+        </div>
+    </div>
+
+    <div class="toolbar">
+        <button class="tool-btn active" id="btnAll" onclick="setMode('all')">Hepsi</button>
+        <button class="tool-btn" id="btnWrong" onclick="setMode('wrong')">Bilemediklerim</button>
+        <button class="tool-btn" onclick="shuffleCurrentList()">🔀 Karıştır</button>
+    </div>
+
+    <div class="card-container" id="cardContainer">
+        <!-- JS will inject content here -->
+    </div>
+
+    <div class="bottom-actions">
+        <button id="btnReset" onclick="resetAll()">Tümünü Sıfırla</button>
+    </div>
+
+    <script>
+        // Data
+        let allQuestions = [{"q": "Ölümcül kilitlenme, süreçlerin birbirlerinden bekledikleri kaynaklar nedeniyle ___ hâle gelmeleri durumudur.", "a": "ilerleyemez"}, {"q": "Çoklu iş parçacığı veya ___ işlem gerektiren sistemlerde deadlock kritik bir sorundur.", "a": "çoklu"}, {"q": "İşletim sistemi tasarımında deadlock'un tanımlanması, sezimi ve ___ temel konulardır.", "a": "engellenmesi"}, {"q": "Deadlock oluşması için Coffman tarafından tanımlanan ___ koşulun eşzamanlı olarak sağlanması gerekir.", "a": "dört"}, {"q": "Bir kaynağın aynı anda yalnızca bir süreç tarafından kullanılabilmesine ___ dışlama denir.", "a": "karşılıklı"}, {"q": "Süreçlerin bazı kaynaklara sahipken ek kaynaklar için beklemesine ___ ve bekleme denir.", "a": "sahip olma"}, {"q": "Kaynakların süreçlerden zorla alınamaması kuralına ___ alınamazlık denir.", "a": "geri"}, {"q": "Bir sürecin diğerinin elindeki kaynağı beklemesiyle kapalı bir halka oluşmasına ___ bekleme denir.", "a": "döngüsel"}, {"q": "Sistemin daha başlangıç aşamasında deadlock oluşumuna yapısal olarak izin vermeyecek şekilde düzenlenmesine deadlock ___ denir.", "a": "engelleme"}, {"q": "Deadlock engelleme mantığı, Coffman koşullarından en az ___ tanesini devre dışı bırakmaktır.", "a": "bir"}, {"q": "Deadlock engelleme, sezme mekanizmalarına göre daha ___ bir tekniktir.", "a": "proaktif"}, {"q": "Sistemin kararsız duruma düşmesini beklemek yerine, kaynak tahsisi politikaları baştan buna izin vermeyecek şekilde ___ .", "a": "yapılandırılır"}, {"q": "Deadlock engellemenin en önemli dezavantajı, kaynak kullanım ___ düşürmesidir.", "a": "verimliliğini"}, {"q": "Engelleme politikaları kimi zaman süreçlerin gereğinden fazla ___ yol açar.", "a": "kısıtlanmasına"}, {"q": "Yazıcı ve disk kolları gibi ___ kaynaklarda karşılıklı dışlama doğası gereği kaçınılmazdır.", "a": "fiziksel"}, {"q": "Donanımsal kaynaklar genellikle atomik ve ___ oldukları için paylaşılamazlar.", "a": "bölünemez"}, {"q": "Pratik bir işletim sistemi tasarımında karşılıklı dışlama koşulunun tamamen kaldırılması mümkün ___ .", "a": "değildir"}, {"q": "Fiziksel kaynaklarda karşılıklı dışlamayı kaldırmak, veri ___ tehlikeye atar.", "a": "tutarlılığını"}, {"q": "Yazıcının aynı anda iki süreç tarafından kullanılması, ___ birbirine karışmasına yol açar.", "a": "çıktının"}, {"q": "Bazı ___ kaynaklarında karşılıklı dışlama tamamen zorunlu değildir.", "a": "yazılım"}, {"q": "Yazılım kaynaklarında karşılıklı dışlamayı esnetmek için kaynak ___ teknikleri kullanılır.", "a": "sanallaştırma"}, {"q": "Karşılıklı dışlamayı esnetmenin temel nedeni, ___ artırmaktır.", "a": "performansı"}, {"q": "Bir dosya üzerinde aynı anda çok sayıda süreç okuma yapabilir, buna salt okunur ___ denir.", "a": "paylaşım"}, {"q": "Bellek sayfaları yazarken kopyala tekniğiyle süreçlere ___ gibi gösterilebilir.", "a": "paylaşılıyor"}, {"q": "Geleneksel karşılıklı dışlama 'tek kaynak, tek ___' ilkesine dayanır.", "a": "kilit"}, {"q": "Büyük bir kaynağı tek başına kilitlemek yerine alt bölümlere kilit uygulanmasına ___ taneli kilitleme denir.", "a": "ince"}, {"q": "İnce taneli kilitleme sayesinde aynı ___ farklı bölümlerine ayrı kilitler uygulanabilir.", "a": "dosyanın"}, {"q": "Çok çekirdekli işlemciler için tasarlanan bazı veri yapıları ___ kullanmaz.", "a": "kilit"}, {"q": "Kilitsiz yapılar, atomik karşılaştır ve ___ gibi talimatlar kullanır.", "a": "değiştir"}, {"q": "İşlemsel hafıza kod bloklarını bir ___ işlemi gibi yürütür.", "a": "veritabanı"}, {"q": "İşlemsel hafızada işlem tamamlanmazsa çakışma durumunda ___ yapılır.", "a": "geri alma"}, {"q": "İşlemsel hafıza sayesinde klasik kilit mekanizması gerekmez, böylece ___ dışlama önemli ölçüde azaltılır.", "a": "karşılıklı"}, {"q": "Deadlock engelleme yaklaşımı açısından en ___ hedef koşul karşılıklı dışlamadır.", "a": "zayıf"}, {"q": "Kaynak tutarken yeni kaynak bekleme koşuluna ___ ve bekleme denir.", "a": "sahip olma"}, {"q": "Bu koşulu engelleme yöntemlerinden biri, süreçlerin tüm kaynakları ___ istemesidir.", "a": "başta"}, {"q": "Tüm kaynakları başta isteme yönteminde bir süreç ya tüm kaynakları alır başlar ya da hiçbirini alamaz ___ .", "a": "bekler"}, {"q": "Süreçlerin tüm kaynakları başta istemesi durumunda, kaynak tahsisi grafiğinde ___ kenarları oluşmaz.", "a": "istek"}, {"q": "Süreçlerin ihtiyaç duyacakları kaynakları baştan tam olarak ___ çok büyük bir dezavantajdır.", "a": "öngörememesi"}, {"q": "İkinci politika, ek kaynak isterken hiçbir kaynak ___ politikasıdır.", "a": "tutmama"}, {"q": "Kaynak isterken tutmama politikasında süreç ek talepte bulunmadan önce elindekileri ___ zorundadır.", "a": "bırakmak"}, {"q": "Süreç elindeki kaynakları bırakıp, yenilerle birlikte ___ talep eder.", "a": "yeniden"}, {"q": "Hiçbir kaynak tutmama politikasında deadlock tamamen ___ .", "a": "önlenir"}, {"q": "Kaynakları sürekli bırakıp yeniden almak sistemde ek ___ oluşturur.", "a": "yük"}, {"q": "Kaynak bırakıp alma politikası, yarış durumlarına ve ___ riskine yol açabilir.", "a": "açlık"}, {"q": "Pratikte çok verimsiz bulunduğu için bu engelleme yöntemi genellikle sadece ___ zamanlı sistemlerde kullanılır.", "a": "gerçek"}, {"q": "Bir kaynağın sürece verildikten sonra süreç tamamlanmadan zorla geri alınamamasına ___ alınamazlık koşulu denir.", "a": "geri"}, {"q": "Bu koşulunu devre dışı bırakmak için kaynağın geri alınması yani ___ politikası kullanılır.", "a": "zorla alma"}, {"q": "Bir süreç yeni kaynak talep ettiğinde kaynak tahsis edilemiyorsa, sürecin elindeki tüm kaynaklar ___ alınır.", "a": "geri"}, {"q": "Geri alınan kaynaklar sistemdeki ___ listesine iade edilir.", "a": "boşta"}, {"q": "Süreç kaynak tutarak beklemediği için ___ bekleme zinciri kırılmış olur.", "a": "dairesel"}, {"q": "Yazıcıda yazdırma ortasında geri alma mümkün olmadığı için her kaynak ___ alınamaz.", "a": "geri"}, {"q": "Sürecin ilerlemesi kaybolabileceği için zorla alma durumunda ___ gerekebilir.", "a": "geri alma"}, {"q": "İşlem düzeyi zorla almada yalnızca belirli türdeki kaynaklar, örneğin ___ belirli bölümleri geri alınabilir.", "a": "belleğin"}, {"q": "Giriş/Çıkış cihazları gibi ___ olan kaynaklar zorla geri alınamaz.", "a": "atomik"}, {"q": "Zorla geri alınamazlık kuralını esnetmenin yollarından biri süreçlerin belirli aralıklarla ___ kayıtlarını tutmaktır.", "a": "kontrol noktası"}, {"q": "Kontrol noktası yönteminde süreç kaynağı geri alındığında, döndüğünde en son ___ noktasından devam eder.", "a": "kontrol"}, {"q": "Bu engelleme mekanizması, donanım gereksinimleri nedeniyle pratikte ___ uygulanabilirliğe sahiptir.", "a": "kısmi"}, {"q": "Deadlock'un meydana gelmesinin son ve en temel şartı ___ bekleme koşuludur.", "a": "dairesel"}, {"q": "Dairesel bekleme koşulu engellenirse deadlock oluşması ___ olarak imkânsızdır.", "a": "matematiksel"}, {"q": "Dairesel beklemeyi engellemek için sistemdeki tüm kaynak türlerine ___ bir sıra numarası atanır.", "a": "genel"}, {"q": "Kaynakların tam sıralamasında süreç yalnızca sıra numarası kendisinden ___ olan kaynağı isteyebilir.", "a": "büyük"}, {"q": "Süreçlerin kaynakları her zaman artan sırayla istemesi ___ oluşmasını imkansız kılar.", "a": "döngü"}, {"q": "Sıralama kuralına uyulduğunda, kaynak isteklerinden oluşan grafik daima çevrimsiz yani ___ olur.", "a": "döngüsüz"}, {"q": "Dairesel bekleme engelleme yöntemi kilitlenme önleme içinde en ___ kullanılan mekanizmadır.", "a": "çok"}, {"q": "Sistemin süreçlerin kaynak tahsisi durumunu analiz ederek kilitlenmeyi sonradan tespit etmesine kilitlenme ___ denir.", "a": "sezme"}, {"q": "Sezme yöntemi, sistemin kilitlenmeye düşmesini en baştan ___ çalışmaz.", "a": "engellemeye"}, {"q": "Sezme işleminde kilitlenme tespit edildiğinde uygun ___ adımları başlatılır.", "a": "kurtarma"}, {"q": "Süreçten kaynağa giden kenar, o kaynağa olan ___ ifade eder.", "a": "talebi"}, {"q": "Kaynaktan sürece giden kenar, o kaynağın sürece ___ edildiğini gösterir.", "a": "tahsis"}, {"q": "Kilitlenme, Kaynak Tahsis Grafiğinde bir ___ görülmesiyle tespit edilir.", "a": "döngü"}, {"q": "Tek kaynağın birden çok örneği varsa bu grafik yetersiz kalır, bu durumda ___ grafiği kullanılır.", "a": "bekleme"}, {"q": "Çok örnekli kaynaklarda kilitlenme tespiti için Bankacı Algoritması'na benzeyen ___ tabanlı algoritmalar kullanılır.", "a": "matris"}, {"q": "Matris algoritmasında, sürecin talep ettiği ekstra kaynaklar ___ matrisinde tutulur.", "a": "istek"}, {"q": "Matris algoritmasında sistemde kullanılmayı bekleyen boş kaynaklar ___ dizisinde tutulur.", "a": "uygun"}, {"q": "Algoritma çalışabilir süreç ararken İstek değeri ___ değerinden küçük veya eşit olan süreci bulur.", "a": "uygun"}, {"q": "Sezme mekanizması her 10 saniyede bir çalıştırılıyorsa buna ___ sezme denir.", "a": "periyodik"}, {"q": "Bir kaynak isteği reddedildiğinde algoritmanın tetiklenmesine ___ tabanlı sezme denir.", "a": "olay"}, {"q": "Kilitlenme içindeki tüm süreçlerin aynı anda öldürülmesine ___ sonlandırma denir.", "a": "toplu"}, {"q": "Süreçlerin kilitlenme kırılana kadar birer birer öldürülmesine ___ sonlandırma denir.", "a": "seçmeli"}, {"q": "Kurtarma için ikinci yöntem, kilitlenmeye sebep olan sürecin elindeki kaynağı ___ alıp başka sürece vermektir.", "a": "zorla"}];
+        
+        allQuestions.forEach((q, index) => {
+            q.id = index;
+            q.status = 'unanswered'; 
+        });
+
+        let currentMode = 'all'; 
+        let currentList = [];
+        let currentIndex = 0;
+        let isAnswerChecked = false;
+
+        let runTotal = 0;
+        let runCorrect = 0;
+        let runIncorrect = 0;
+
+        const cardContainer = document.getElementById("cardContainer");
+        const statTotal = document.getElementById("statTotal");
+        const statCorrect = document.getElementById("statCorrect");
+        const statIncorrect = document.getElementById("statIncorrect");
+        const btnAll = document.getElementById("btnAll");
+        const btnWrong = document.getElementById("btnWrong");
+
+        function normalizeStr(str) {
+            if (!str) return "";
+            const charMap = {
+                'ç': 'c', 'ğ': 'g', 'ı': 'i', 'i̇': 'i', 'ö': 'o', 'ş': 's', 'ü': 'u',
+                'Ç': 'C', 'Ğ': 'G', 'I': 'I', 'İ': 'I', 'Ö': 'O', 'Ş': 'S', 'Ü': 'U'
+            };
+            let res = "";
+            for (let i = 0; i < str.length; i++) {
+                let c = str[i];
+                res += charMap[c] || c;
+            }
+            return res.toLowerCase().replace(/[^a-z0-9]/g, '');
+        }
+
+        function updateStatsUI() {
+            statTotal.innerText = runTotal;
+            statCorrect.innerText = runCorrect;
+            statIncorrect.innerText = runIncorrect;
+        }
+
+        function setMode(mode) {
+            currentMode = mode;
+            btnAll.classList.remove('active');
+            btnWrong.classList.remove('active');
+            
+            if (mode === 'all') {
+                btnAll.classList.add('active');
+            } else {
+                btnWrong.classList.add('active');
+            }
+            refreshList();
+        }
+
+        function refreshList() {
+            if (currentMode === 'wrong') {
+                currentList = allQuestions.filter(q => q.status === 'incorrect');
+            } else {
+                currentList = [...allQuestions];
+            }
+            
+            runTotal = currentList.length;
+            runCorrect = 0;
+            runIncorrect = 0;
+            currentIndex = 0;
+            
+            currentList.forEach(q => q.runStatus = 'unanswered');
+            
+            loadCard();
+        }
+
+        function shuffleCurrentList() {
+            for (let i = currentList.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [currentList[i], currentList[j]] = [currentList[j], currentList[i]];
+            }
+            currentIndex = 0;
+            loadCard();
+        }
+
+        function loadCard() {
+            updateStatsUI();
+            
+            if (currentList.length === 0) {
+                let msg = currentMode === 'wrong' ? "Harika! 🎉 Tüm yanlışları düzelttiniz." : "Liste boş.";
+                cardContainer.innerHTML = `<div class="empty-state">
+                    <h3>${msg}</h3>
+                </div>`;
+                return;
+            }
+
+            cardContainer.innerHTML = `
+                <div class="progress">${currentIndex + 1} / ${currentList.length}</div>
+                <div class="question-text" id="questionText"></div>
+                <div class="input-wrapper">
+                    <input type="text" id="answerInput" placeholder="Cevabı yazıp Enter'a basın..." autocomplete="off">
+                </div>
+                <div class="feedback" id="feedback"></div>
+                <div class="nav-buttons">
+                    <button id="btnPrev" onclick="prevCard()">Geri</button>
+                    <button id="btnNext" onclick="nextCard()">Geç</button>
+                </div>
+            `;
+            
+            const qObj = currentList[currentIndex];
+            document.getElementById("questionText").innerHTML = qObj.q.replace("___", "<strong>___</strong>");
+            isAnswerChecked = false;
+            
+            const input = document.getElementById("answerInput");
+            input.focus();
+            input.addEventListener("keydown", handleKeydown);
+        }
+
+        function checkAnswer() {
+            if (isAnswerChecked || currentList.length === 0) return;
+            
+            const qObj = currentList[currentIndex];
+            const inputEl = document.getElementById("answerInput");
+            const fbEl = document.getElementById("feedback");
+            const btnNext = document.getElementById("btnNext");
+            
+            const userVal = inputEl.value;
+            const correctVal = qObj.a;
+            
+            const normUser = normalizeStr(userVal);
+            const normCorrect = normalizeStr(correctVal);
+            
+            const mainObj = allQuestions.find(q => q.id === qObj.id);
+
+            if (normUser === normCorrect) {
+                fbEl.innerHTML = "Doğru! 🎉 (Devam etmek için Enter)";
+                fbEl.className = "feedback correct";
+                mainObj.status = 'correct';
+                if (qObj.runStatus === 'unanswered') {
+                    runCorrect++;
+                    qObj.runStatus = 'answered';
+                }
+            } else {
+                fbEl.innerHTML = `Yanlış! ❌<div class="answer-reveal">Doğru Cevap: <strong>${correctVal}</strong></div><div style="font-size:0.9rem; color:#64748b; margin-top:5px;">(Devam etmek için Enter)</div>`;
+                fbEl.className = "feedback incorrect";
+                mainObj.status = 'incorrect';
+                if (qObj.runStatus === 'unanswered') {
+                    runIncorrect++;
+                    qObj.runStatus = 'answered';
+                }
+            }
+            
+            updateStatsUI();
+            inputEl.disabled = true;
+            isAnswerChecked = true;
+            btnNext.innerText = "Sonraki";
+        }
+
+        function nextCard() {
+            if (currentList.length === 0) return;
+            
+            if (currentIndex < currentList.length - 1) {
+                currentIndex++;
+                loadCard();
+            } else {
+                refreshList();
+            }
+        }
+
+        function prevCard() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                loadCard();
+            }
+        }
+
+        function resetAll() {
+            allQuestions.forEach(q => {
+                q.status = 'unanswered';
+            });
+            setMode('all');
+        }
+
+        function handleKeydown(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                if (isAnswerChecked) {
+                    nextCard();
+                } else {
+                    checkAnswer();
+                }
+            }
+        }
+
+        document.addEventListener("keydown", function(event) {
+            if (event.key === "Enter" && document.activeElement !== document.getElementById("answerInput")) {
+                if (isAnswerChecked) {
+                    event.preventDefault();
+                    nextCard();
+                }
+            }
+        });
+        
+        setMode('all');
+    </script>
+</body>
+</html>
