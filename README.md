@@ -8,7 +8,7 @@ Sadece tek bir HTML dosyasından oluşur. Herhangi bir sunucuya, kütüphaneye v
 ## 🚀 Canlı Önizleme (Live Preview) ile Çalıştırma
 
 Uygulamayı herhangi bir indirme veya kurulum yapmadan doğrudan tarayıcınızda kullanmak için tıklayın:
-👉 **[Uygulamayı Başlat (Canlı Önizleme)]()**
+👉 **[Uygulamayı Başlat (Canlı Önizleme)](https://17busra.github.io/deadlock-flashcard-html/)**
 
 
 
